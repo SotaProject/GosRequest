@@ -1,0 +1,12 @@
+### env
+* HTTP_PORT(default 80)
+* HTTP_ADDR(default 0.0.0.0)
+* HTTP_CONCURRENCY(default 1000)
+* HTTP_BODY_LIMIT(default 2048)
+* HTTP_PREFORK(default false)
+* HTTP_PROXY_HEADER(default empty, set "X-Forwarded-For" when under proxy)
+* DB_URL(required)
+* DB_MAX_CONNECTIONS(default 0)
+* DB_MAX_IDLE_CONNECTIONS(default 2)
+* NOTIFICATIONS_URL(required)
+* NOTIFICATIONS_TOKEN(required)
