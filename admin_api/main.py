@@ -21,18 +21,21 @@ async def root():
 
 
 @app.get("/statistics")
-async def statistics(start_datetime: Optional[datetime] = None,
-                     end_datetime: Optional[datetime] = None):
+async def statistics(start_datetime: Optional[datetime] = None, end_datetime: Optional[datetime] = None):
     if not start_datetime:
-        start_datetime = datetime(1970, 1, 1, 0, 0)
+        start_datetime = datetime.min
+
     if not end_datetime:
         end_datetime = datetime.now()
+
     async with session_scope() as session:
-        q = select(models.Request.user_agent,
-                   func.count(models.Request.uuid).label('count')) \
-            .where(models.Request.created_at > start_datetime, models.Request.created_at < end_datetime) \
+        q = (
+            select(models.Request.user_agent, func.count(models.Request.uuid).label('count'))
+            .where(models.Request.created_at > start_datetime, models.Request.created_at < end_datetime)
             .group_by(models.Request.user_agent)
+        )
         r = (await session.execute(q)).all()
+
         browsers = {}
         oss = {}
         for req in r:
