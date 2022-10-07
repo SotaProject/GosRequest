@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Optional
 from fastapi import FastAPI
 from sqlalchemy.sql import select
 from sqlalchemy import Date, cast, func, text
@@ -21,26 +21,39 @@ async def root():
 
 
 @app.get("/statistics")
-async def statistics(start_datetime: Union[datetime, None],
-                     end_datetime: Union[datetime, None]):
+async def statistics(start_datetime: Optional[datetime] = None,
+                     end_datetime: Optional[datetime] = None):
+    if not start_datetime:
+        start_datetime = datetime(1970, 1, 1, 0, 0)
+    if not end_datetime:
+        end_datetime = datetime.now()
     async with session_scope() as session:
-        q = select(models.Request.user_agent, models.Request.subnet_uuid) \
-            .where(models.Request.created_at > start_datetime, models.Request.created_at < end_datetime)
+        q = select(models.Request.user_agent,
+                   func.count(models.Request.uuid).label('count')) \
+            .where(models.Request.created_at > start_datetime, models.Request.created_at < end_datetime) \
+            .group_by(models.Request.user_agent)
         r = (await session.execute(q)).all()
         browsers = {}
         oss = {}
         for req in r:
             ua = httpagentparser.detect(req[0])
-            browser_name = ua['browser']['name']
-            os_name = ua['os']['name']
+            if 'browser' not in ua.keys():
+                browser_name = 'Other'
+            else:
+                browser_name = ua['browser']['name']
+            if 'os' not in ua.keys():
+                os_name = 'Other'
+            else:
+                os_name = ua['os']['name']
+
             if browser_name not in browsers.keys():
-                browsers[browser_name] = 1
+                browsers[browser_name] = req[1]
             else:
-                browsers[browser_name] += 1
+                browsers[browser_name] += req[1]
             if os_name not in oss.keys():
-                oss[os_name] = 1
+                oss[os_name] = req[1]
             else:
-                oss[os_name] += 1
+                oss[os_name] += req[1]
 
         browsers_p = {}
         os_p = {}
@@ -61,7 +74,8 @@ async def statistics(start_datetime: Union[datetime, None],
         )
         dates = (await session.execute(q)).all()
 
-        q = select(models.Subnet.name, func.count(models.Request.uuid).label('count'))\
+        q = select(models.Subnet.name, func.count(models.Request.uuid).label('count')) \
+            .where(models.Request.created_at > start_datetime, models.Request.created_at < end_datetime) \
             .group_by(
             models.Request.subnet_uuid, models.Subnet.name
         ).join(
