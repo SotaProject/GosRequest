@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Optional
 from fastapi import FastAPI
 from sqlalchemy.sql import select
 from sqlalchemy import Date, cast, func, text
@@ -21,11 +21,15 @@ async def root():
 
 
 @app.get("/statistics")
-async def statistics(start_datetime: Union[datetime, None],
-                     end_datetime: Union[datetime, None]):
+async def statistics(start_datetime: Optional[datetime] = None,
+                     end_datetime: Optional[datetime] = None):
+    if not start_datetime:
+        start_datetime = datetime(1970, 1, 1, 0, 0)
+    if not end_datetime:
+        end_datetime = datetime.now()
     async with session_scope() as session:
-        q = select(models.Request.user_agent, models.Request.subnet_uuid) \
-            .where(models.Request.created_at > start_datetime, models.Request.created_at < end_datetime)
+        q = select(models.Request.useragent, models.Request.uuid) \
+            .where(models.Request.at > start_datetime, models.Request.at < end_datetime)
         r = (await session.execute(q)).all()
         browsers = {}
         oss = {}
@@ -50,23 +54,23 @@ async def statistics(start_datetime: Union[datetime, None],
             os_p[k] = v / sum(oss.values())
 
         q = select(
-            cast(models.Request.created_at, Date).label('date'),
+            cast(models.Request.at, Date).label('date'),
             func.count().label('count'),
         ).filter(
-            models.Request.created_at > start_datetime, models.Request.created_at < end_datetime
+            models.Request.at > start_datetime, models.Request.at < end_datetime
         ).group_by(
-            cast(models.Request.created_at, Date),
+            cast(models.Request.at, Date),
         ).order_by(
             text('date desc')
         )
         dates = (await session.execute(q)).all()
 
-        q = select(models.Subnet.name, func.count(models.Request.uuid).label('count'))\
+        q = select(models.Request.mask_owner, func.count(models.Request.uuid).label('count')) \
+            .where(models.Request.at > start_datetime, models.Request.at < end_datetime) \
             .group_by(
-            models.Request.subnet_uuid, models.Subnet.name
-        ).join(
-            models.Subnet.name, models.Subnet.uuid == models.Request.subnet_uuid
-        )
+                models.Request.mask_owner
+            )
+        print(q)
         subnets = (await session.execute(q)).all()
 
     return {
