@@ -1,22 +1,12 @@
-from sqlalchemy import Column, BigInteger, TIMESTAMP, Text, BOOLEAN, ForeignKey, text
-from sqlalchemy.dialects.postgresql import INET
-from db_utils import Base as BaseModel
-from db_utils import UUID
-import uuid
+from db_utils import Base as BaseModel, UUID
+from sqlalchemy import Column, TIMESTAMP, Text, ForeignKey, text
+from sqlalchemy.dialects.postgresql import INET, CIDR
+from sqlalchemy.orm import relationship
 
 
 class Request(BaseModel):
-    """CREATE TABLE requests (
-        uuid uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-        tracker_uuid uuid NOT NULL REFERENCES trackers (uuid),
-        url text NOT NULL,
-        ip inet NOT NULL,
-        subnet_uuid uuid NOT NULL REFERENCES subnets (uuid),
-        user_agent text NOT NULL,
-        created_at timestamp DEFAULT now() NOT NULL
-    );
-    """
     __tablename__ = 'requests'
+
     uuid = Column(UUID, primary_key=True, server_default=text("uuid_generate_v4()"))
     tracker_uuid = Column(UUID, ForeignKey('trackers.uuid'), nullable=False)
     url = Column(Text, nullable=False)
@@ -26,15 +16,27 @@ class Request(BaseModel):
     created_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
 
 
-class Subnet(BaseModel):
-    """
-        CREATE TABLE subnets (
-            uuid uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-            name text NOT NULL,
-            tag_uuid uuid NOT NULL REFERENCES subnets_tags (uuid)
-        );
-    """
-    __tablename__ = 'subnets'
+class SubnetRange(BaseModel):
+    __tablename__ = 'subnet_ranges'
+
+    cidr = Column(CIDR, primary_key=True)
+    subnet_uuid = Column(UUID, ForeignKey('subnets.uuid'), nullable=False)
+
+
+class SubnetTag(BaseModel):
+    __tablename__ = 'subnet_tags'
+
     uuid = Column(UUID, primary_key=True, server_default=text("uuid_generate_v4()"))
     name = Column(Text, nullable=False)
-    tag_uuid = Column(UUID, ForeignKey('subnets_tags.uuid'), nullable=False)
+    subnet_uuid = Column(UUID, ForeignKey('subnets.uuid'), nullable=False)
+
+
+class Subnet(BaseModel):
+    __tablename__ = 'subnets'
+
+    uuid = Column(UUID, primary_key=True, server_default=text("uuid_generate_v4()"))
+    name = Column(Text, nullable=False)
+
+    ranges = relationship(SubnetRange)
+    tags = relationship(SubnetTag)
+
