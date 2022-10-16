@@ -72,7 +72,8 @@ async def fetch_notifications(tracker_uuid: str) -> structures.FetchNotification
         notifications: list[models.Notification] = (await session.execute(query)).scalars().all()
 
         return structures.FetchNotificationsResponse(
-            chat_ids=[notification.chat_id for notification in notifications]
+            chat_ids=[notification.chat_id for notification in notifications],
+            last_updated=datetime.now().timestamp()
         )
 
 
