@@ -12,8 +12,8 @@ import uuid
 import re
 import os
 
-from db_utils import session_scope, prepare_db
-import models
+from common.db_utils import session_scope, prepare_db
+from common import models
 
 TOKEN = os.environ.get("BOT_TOKEN")
 

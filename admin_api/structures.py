@@ -13,3 +13,7 @@ class SubnetsDataResponse(BaseModel):
     subnets: list[Subnet]
 
     last_updated: int
+
+
+class FetchNotificationsResponse(BaseModel):
+    chat_ids: list[str]

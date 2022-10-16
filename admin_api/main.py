@@ -7,9 +7,9 @@ from fastapi import FastAPI
 from sqlalchemy import Date, cast, func, text, select
 from sqlalchemy.orm import selectinload
 
-import models
-import structures
-from db_utils import session_scope, prepare_db
+from admin_api import structures
+from common import models
+from common.db_utils import session_scope, prepare_db
 
 app = FastAPI()
 app.on_event('startup')(prepare_db)
@@ -57,7 +57,27 @@ async def data() -> structures.SubnetsDataResponse:
         )
 
 
+@app.get('/fetch_notifications')
+@cached(ttl=60)
+async def fetch_notifications(tracker_uuid: str) -> structures.FetchNotificationsResponse:
+    async with session_scope() as session:
+        query = (
+            select(models.Notification)
+            .where(
+                models.Notification.tracker_uuid == tracker_uuid,
+                models.Notification.enable.is_(True),
+            )
+        )
+
+        notifications: list[models.Notification] = (await session.execute(query)).scalars().all()
+
+        return structures.FetchNotificationsResponse(
+            chat_ids=[notification.chat_id for notification in notifications]
+        )
+
+
 @app.get('/statistics')
+@cached(ttl=60)
 async def statistics(start_datetime: datetime | None = None, end_datetime: datetime | None = None):
     if not start_datetime:
         start_datetime = datetime.min
