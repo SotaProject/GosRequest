@@ -16,6 +16,15 @@ class SubnetsDataResponse(BaseModel):
 
 
 class FetchNotificationsResponse(BaseModel):
+    tracker_name: str
     chat_ids: list[str]
 
     last_updated: int
+
+
+class NewRequest(BaseModel):
+    tracker_uuid: str
+    url: str
+    ip: str
+    user_agent: str
+    subnet_uuid: str

@@ -1,8 +1,8 @@
-import httpagentparser
 import logging
-
-from aiocache import cached
 from datetime import datetime
+
+import httpagentparser
+from aiocache import cached
 from fastapi import FastAPI
 from sqlalchemy import Date, cast, func, text, select
 from sqlalchemy.orm import selectinload
@@ -62,19 +62,36 @@ async def data() -> structures.SubnetsDataResponse:
 async def fetch_notifications(tracker_uuid: str) -> structures.FetchNotificationsResponse:
     async with session_scope() as session:
         query = (
-            select(models.Notification)
+            select(models.Tracker)
             .where(
-                models.Notification.tracker_uuid == tracker_uuid,
-                models.Notification.enable.is_(True),
+                models.Tracker.uuid == tracker_uuid,
+            )
+            .options(
+                selectinload(models.Tracker.notifications)
             )
         )
 
-        notifications: list[models.Notification] = (await session.execute(query)).scalars().all()
+        tracker: models.Tracker = (await session.execute(query)).scalars().one()
 
         return structures.FetchNotificationsResponse(
-            chat_ids=[notification.chat_id for notification in notifications],
+            tracker_name=tracker.name,
+            chat_ids=[notification.chat_id for notification in tracker.notifications if notification.enable],
             last_updated=datetime.now().timestamp()
         )
+
+
+@app.post('/new_request')
+async def save_new_request(request: structures.NewRequest):
+    async with session_scope() as session:
+        db_request = models.Request(
+            tracker_uuid=request.tracker_uuid,
+            url=request.url,
+            ip=request.ip,
+            subnet_uuid=request.subnet_uuid,
+            user_agent=request.user_agent,
+        )
+
+        session.add(db_request)
 
 
 @app.get('/statistics')

@@ -42,6 +42,14 @@ class Subnet(BaseModel):
     tags = relationship(SubnetTag)
 
 
+class Notification(BaseModel):
+    __tablename__ = 'notifications'
+    uuid = Column(UUID, nullable=False, unique=True, primary_key=True, default=text("uuid_generate_v4()"))
+    tracker_uuid = Column(UUID, ForeignKey('trackers.uuid'), nullable=False)
+    chat_id = Column(BigInteger, nullable=False)
+    enable = Column(Boolean, default=True)
+
+
 class Tracker(BaseModel):
     __tablename__ = 'trackers'
     uuid = Column(UUID, nullable=False, unique=True, primary_key=True)
@@ -49,13 +57,7 @@ class Tracker(BaseModel):
     owner_id = Column(BigInteger, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
 
-
-class Notification(BaseModel):
-    __tablename__ = 'notifications'
-    uuid = Column(UUID, nullable=False, unique=True, primary_key=True, default=text("uuid_generate_v4()"))
-    tracker_uuid = Column(UUID, ForeignKey('trackers.uuid'), nullable=False)
-    chat_id = Column(BigInteger, nullable=False)
-    enable = Column(Boolean, default=True)
+    notifications = relationship(Notification)
 
 
 class Users(BaseModel):
