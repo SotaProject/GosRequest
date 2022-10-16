@@ -4,8 +4,10 @@ WORKDIR /app
 
 COPY bot bot
 COPY common common
-RUN mv bot/main.py main.py
+RUN mv bot/bot.py bot.py
+
+RUN apk add build-base
 
 RUN pip3 install -r bot/requirements.txt
 
-CMD ["python3", "main.py"]
+CMD ["python3", "bot.py"]
