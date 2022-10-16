@@ -114,7 +114,7 @@ async def set_tracker_name(message: types.Message):
         data = f"Добавь этот код на сайт, чтобы я смог работать\n" \
             f"`<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
             f"src='http://gr.stpr.cc/GR.js' tid='{uuid_nm}' " \
-            f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE=' " \
+            f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE='" \
             f"</script>`"
         await message.reply(text=data, parse_mode=ParseMode.MARKDOWN)
         await session.execute(update(models.Users).where(models.Users.telegram_id == message.from_user.id)
@@ -284,7 +284,7 @@ async def get_code(query: types.CallbackQuery):
     data = f"Добавь этот код на сайт, чтобы я смог работать\n" \
            f"`<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
            f"src='http://gr.stpr.cc/GR.js' tid='{tid}' " \
-           f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE=' " \
+           f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE='" \
            f"</script>`"
     keyboard_markup = types.InlineKeyboardMarkup(row_width=1)
     keyboard_markup.row(types.InlineKeyboardButton('« Вернуться к настройкам трекера',
