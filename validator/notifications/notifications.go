@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"text/template"
 )
@@ -18,16 +19,18 @@ type SendData struct {
 	TrackerName string
 	SubnetCIDR  string
 	SubnetName  string
-	SubnetTag   string
+	SubnetTags  []string
 	URL         string
 	IP          string
 	UserAgent   string
-	ChatID      []int64
+	ChatID      []string
 }
+
 type Config struct {
 	NotificationsURL   string
 	NotificationsToken string
 }
+
 type request struct {
 	ChatID  int64  `json:"chatID"`
 	Message string `json:"message"`
@@ -74,9 +77,16 @@ func SendNotifications(data SendData) error {
 		chatID := chatID
 		go func() {
 			defer wg.Done()
-			err := sendNotification(chatID, message)
+
+			chatIntID, err := strconv.ParseInt(chatID, 10, 64)
 			if err != nil {
-				log.Println(fmt.Sprintf("Unable to send notification to %d: %s", chatID, err.Error()))
+				log.Println(fmt.Sprintf("bad chat_id: %s", err))
+				return
+			}
+
+			err = sendNotification(chatIntID, message)
+			if err != nil {
+				log.Println(fmt.Sprintf("unable to send notification to %s: %s", chatID, err.Error()))
 			}
 		}()
 	}

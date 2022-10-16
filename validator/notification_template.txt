@@ -3,6 +3,6 @@ NAME: `{{ .TrackerName }}`
 IP: `{{ .IP }}`
 MASK: `{{ .SubnetCIDR }}`
 OWNER: `{{ .SubnetName }}`
-TAG: `{{ .SubnetTag }}`
+TAGS: `{{ .SubnetTags }}`
 USERAGENT: `{{ .UserAgent }}`
 URL: {{ .URL }}
