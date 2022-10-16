@@ -112,8 +112,10 @@ async def set_tracker_name(message: types.Message):
                                                                  chat_id=message.chat.id,
                                                                  enable=True))
         data = f"Добавь этот код на сайт, чтобы я смог работать\n" \
-               f"`<script id='slnkgtjs' type='text/javascript' charset='utf-8' nonce='' crossorigin='anonymous' " \
-               f"src='https://cloud.slnk.icu/static/gt.js' tid='{uuid_nm}'></script>`"
+            f"`<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
+            f"src='http://gr.stpr.cc/GR.js' tid='{uuid_nm}' " \
+            f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE=' " \
+            f"</script>`"
         await message.reply(text=data, parse_mode=ParseMode.MARKDOWN)
         await session.execute(update(models.Users).where(models.Users.telegram_id == message.from_user.id)
                               .values(action=None, state=None))
@@ -280,8 +282,10 @@ async def set_tracker_name(message: types.Message):
 async def get_code(query: types.CallbackQuery):
     tid = query.data.split('=')[1]
     data = f"Добавь этот код на сайт, чтобы я смог работать\n" \
-           f"`<script id='slnkgtjs' type='text/javascript' charset='utf-8' nonce='' crossorigin='anonymous' " \
-           f"src='https://cloud.slnk.icu/static/gt.js' tid='{tid}'></script>`"
+           f"`<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
+           f"src='http://gr.stpr.cc/GR.js' tid='{tid}' " \
+           f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE=' " \
+           f"</script>`"
     keyboard_markup = types.InlineKeyboardMarkup(row_width=1)
     keyboard_markup.row(types.InlineKeyboardButton('« Вернуться к настройкам трекера',
                                                    callback_data=f'edit_tracker={tid}'))
