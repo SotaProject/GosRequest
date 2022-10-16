@@ -58,6 +58,13 @@ class PrivateMessage(Filter):
         return message.chat.type == 'private'
 
 
+# def get_tag(tid: str) -> str:
+
+get_tag = lambda tid: f"<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
+                      f"src='https://gr.stpr.cc/GR.js' tid='{tid}' " \
+                      f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE='" \
+                      f"</script>"
+
 @dp.message_handler(PrivateMessage(), commands=["start", "help"])
 async def start(message: types.Message):
     async with session_scope() as session:
@@ -111,11 +118,8 @@ async def set_tracker_name(message: types.Message):
                                                                  tracker_uuid=uuid_nm,
                                                                  chat_id=message.chat.id,
                                                                  enable=True))
-        data = f"Добавь этот код на сайт, чтобы я смог работать\n" \
-            f"`<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
-            f"src='http://gr.stpr.cc/GR.js' tid='{uuid_nm}' " \
-            f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE='" \
-            f"</script>`"
+        data = f"Добавь этот код на сайт, чтобы я смог работать\n`{get_tag(uuid_nm)}`"
+
         await message.reply(text=data, parse_mode=ParseMode.MARKDOWN)
         await session.execute(update(models.Users).where(models.Users.telegram_id == message.from_user.id)
                               .values(action=None, state=None))
@@ -281,11 +285,7 @@ async def set_tracker_name(message: types.Message):
 @dp.callback_query_handler(regexp=r"^get_code=(.*-.*-.*-.*)$")
 async def get_code(query: types.CallbackQuery):
     tid = query.data.split('=')[1]
-    data = f"Добавь этот код на сайт, чтобы я смог работать\n" \
-           f"`<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
-           f"src='http://gr.stpr.cc/GR.js' tid='{tid}' " \
-           f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE='" \
-           f"</script>`"
+    data = f"Добавь этот код на сайт, чтобы я смог работать\n`{get_tag(tid)}`"
     keyboard_markup = types.InlineKeyboardMarkup(row_width=1)
     keyboard_markup.row(types.InlineKeyboardButton('« Вернуться к настройкам трекера',
                                                    callback_data=f'edit_tracker={tid}'))
