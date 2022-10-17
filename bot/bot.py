@@ -62,7 +62,7 @@ class PrivateMessage(Filter):
 
 get_tag = lambda tid: f"<script async id='grjs' type='text/javascript' charset='utf-8' crossorigin='anonymous' " \
                       f"src='https://gr.stpr.cc/GR.js' tid='{tid}' " \
-                      f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE='" \
+                      f"integrity='sha256-mcSdGfy7jbt9a8bt/6kKZory9ukibmJNFvKgAetVmVE='>" \
                       f"</script>"
 
 @dp.message_handler(PrivateMessage(), commands=["start", "help"])
