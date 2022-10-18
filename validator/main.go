@@ -20,8 +20,9 @@ type Config struct {
 }
 
 type Response struct {
-	StatusCode int    `json:"statusCode"`
-	Body       string `json:"body"`
+	StatusCode int               `json:"statusCode"`
+	Body       string            `json:"body"`
+	Headers    map[string]string `json:"headers"`
 }
 
 func LoadAppConfig() Config {
@@ -36,6 +37,8 @@ func Handler(api events.APIGatewayV2HTTPRequest) (Response, error) {
 	trackerUUID := api.QueryStringParameters["tracker_uuid"]
 	url := api.QueryStringParameters["url"]
 
+	log.Printf("got request from %s: %s %s %s\n", ip.String(), trackerUUID, url, userAgent)
+
 	data, err := admin_api.GetSubnetsData()
 	if err != nil {
 		err = fmt.Errorf("failed to fetch subnets data from admin_api: %w", err)
@@ -43,6 +46,9 @@ func Handler(api events.APIGatewayV2HTTPRequest) (Response, error) {
 		return Response{}, err
 	}
 
+	resp := Response{StatusCode: 200, Body: "{\"gos\": false}"}
+
+Outer:
 	for _, sn := range data.Subnets {
 		for _, sr := range sn.Ranges {
 			_, ipNet, _ := net.ParseCIDR(sr)
@@ -93,12 +99,19 @@ func Handler(api events.APIGatewayV2HTTPRequest) (Response, error) {
 
 				wg.Wait()
 
-				return Response{StatusCode: 200, Body: "{\"gos\": true}"}, nil
+				resp = Response{StatusCode: 200, Body: "{\"gos\": true}"}
+				break Outer
 			}
 		}
 	}
 
-	return Response{StatusCode: 200, Body: "{\"gos\": false}"}, nil
+	resp.Headers = map[string]string{
+		"access-control-allow-methods": "DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT",
+		"access-control-allow-headers": "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+		"access-control-allow-origin":  "*",
+	}
+
+	return resp, nil
 }
 
 func main() {
